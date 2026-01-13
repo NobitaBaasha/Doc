@@ -117,7 +117,7 @@ export default function Dashboard() {
                   <Card className="h-full hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 overflow-hidden bg-card/50 backdrop-blur-sm">
                     <div className="absolute top-0 right-0 p-4 transition-opacity">
                       <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild>
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download={doc.filename}>
+                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
                           <Download className="h-4 w-4" />
                         </a>
                       </Button>

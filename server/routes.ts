@@ -97,7 +97,12 @@ export async function registerRoutes(
       const allowedRoles = req.body.allowedRoles ? JSON.parse(req.body.allowedRoles) : ['admin']; // Default to admin only if not specified
       
       // If cloudinary is not configured, we mock the url
-      const fileUrl = (req.file as any).path || `https://mock-storage.com/${req.file.originalname}`;
+      let fileUrl = (req.file as any).path || `https://mock-storage.com/${req.file.originalname}`;
+      
+      // Force attachment for download by adding fl_attachment to Cloudinary URL
+      if (fileUrl.includes('res.cloudinary.com')) {
+        fileUrl = fileUrl.replace('/upload/', '/upload/fl_attachment/');
+      }
 
       const doc = await storage.createDocument({
         filename: req.file.originalname,
