@@ -37,3 +37,10 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[userenv]
+
+[userenv.shared]
+CLOUDINARY_CLOUD_NAME = "derpcb92m"
+CLOUDINARY_API_KEY = "513916483697468"
+CLOUDINARY_API_SECRET = "zh_CTu5OpPp4QzZdkG7lgZsJgdk"
