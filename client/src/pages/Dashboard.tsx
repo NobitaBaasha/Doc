@@ -50,13 +50,15 @@ export default function Dashboard() {
   const getViewUrl = (url: string, filename: string) => {
     if (!url.includes('res.cloudinary.com')) return url;
     
-    // Remove fl_attachment to allow inline viewing if the browser supports it
+    // Cloudinary delivery URLs for images and raw files (PDFs, txt, etc)
+    // Images: https://res.cloudinary.com/<cloud_name>/image/upload/<options>/<public_id>
+    // Raw: https://res.cloudinary.com/<cloud_name>/raw/upload/<options>/<public_id>
+    
+    // Remove fl_attachment and ensure we don't have transformations that force download
     let viewUrl = url.replace('/fl_attachment', '');
     
-    // For PDF specifically, Cloudinary 'raw' delivery usually forces download.
-    // However, we can try to use the PDF viewer if it's an image resource type,
-    // but the user wants 'raw' for PDFs. 
-    // Another trick is to ensure no extra flags are present.
+    // For PDFs in 'raw' folder, Cloudinary often forces download unless specifically handled.
+    // However, for most browsers, removing fl_attachment is enough if the content-type is correct.
     return viewUrl;
   };
 
