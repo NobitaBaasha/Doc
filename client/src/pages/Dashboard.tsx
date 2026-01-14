@@ -36,32 +36,27 @@ export default function Dashboard() {
   const getDownloadUrl = (url: string, filename: string) => {
     if (!url.includes('res.cloudinary.com')) return url;
     
-    const ext = filename.split('.').pop()?.toLowerCase();
-    const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext || '');
+    // Cloudinary uses 'fl_attachment' to force a download
+    // For 'raw' files (like PDFs), the URL looks like .../raw/upload/...
+    // For 'image' files, it looks like .../image/upload/...
     
-    if (isImage) {
-      // For images, we can use fl_attachment to force download
-      return url.includes('/fl_attachment') ? url : url.replace('/upload/', '/upload/fl_attachment/');
-    }
+    const isRaw = url.includes('/raw/upload/');
+    const base = isRaw ? '/raw/upload/' : '/image/upload/';
     
-    // For docs, txt, zip, csv, pdf, etc.
-    // If it's already a raw file, it might not have /upload/ but /raw/upload/
-    const uploadPath = url.includes('/raw/upload/') ? '/raw/upload/' : '/upload/';
-    const attachmentPath = uploadPath + 'fl_attachment/';
-    
-    return url.includes('/fl_attachment') ? url : url.replace(uploadPath, attachmentPath);
+    if (url.includes('/fl_attachment')) return url;
+    return url.replace(base, `${base}fl_attachment/`);
   };
 
   const getViewUrl = (url: string, filename: string) => {
     if (!url.includes('res.cloudinary.com')) return url;
     
-    // Cloudinary delivery URLs for images and raw files (PDFs, txt, etc)
-    // Images: https://res.cloudinary.com/<cloud_name>/image/upload/<options>/<public_id>
-    // Raw: https://res.cloudinary.com/<cloud_name>/raw/upload/<options>/<public_id>
-    
+    // Remove fl_attachment to allow inline viewing if the browser supports it
     let viewUrl = url.replace('/fl_attachment', '');
     
-    // Ensure we don't have any transformation that forces download
+    // For PDF specifically, Cloudinary 'raw' delivery usually forces download.
+    // However, we can try to use the PDF viewer if it's an image resource type,
+    // but the user wants 'raw' for PDFs. 
+    // Another trick is to ensure no extra flags are present.
     return viewUrl;
   };
 
