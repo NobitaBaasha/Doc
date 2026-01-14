@@ -65,6 +65,14 @@ export async function registerRoutes(
       const user = await storage.createUser({ ...input, password: hashedPassword });
       
       const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.SESSION_SECRET || 'secret');
+      
+      await storage.createAuditLog({
+        userId: user.id,
+        username: user.username,
+        action: 'login',
+        details: `User registered and logged in as ${user.role}`
+      });
+
       res.status(201).json({ token, user });
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -84,6 +92,14 @@ export async function registerRoutes(
       }
 
       const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, process.env.SESSION_SECRET || 'secret');
+      
+      await storage.createAuditLog({
+        userId: user.id,
+        username: user.username,
+        action: 'login',
+        details: `User logged in as ${user.role}`
+      });
+
       res.json({ token, user });
     } catch (err) {
       res.status(500).json({ message: "Internal server error" });
@@ -115,6 +131,13 @@ export async function registerRoutes(
         allowedRoles: Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles],
       });
 
+      await storage.createAuditLog({
+        userId: user.id,
+        username: user.username,
+        action: 'upload',
+        details: `Uploaded file: ${req.file.originalname} (ID: ${doc.id})`
+      });
+
       res.status(201).json(doc);
     } catch (err) {
       console.error(err);
@@ -126,6 +149,41 @@ export async function registerRoutes(
     const user = (req as any).user;
     const docs = await storage.getDocuments(user.role);
     res.json(docs);
+  });
+
+  app.post('/api/documents/:id/log', authenticateToken, async (req, res) => {
+    const user = (req as any).user;
+    const { action } = req.body;
+    const docId = req.params.id;
+
+    await storage.createAuditLog({
+      userId: user.id,
+      username: user.username,
+      action: action,
+      details: `${action === 'view' ? 'Viewed' : 'Downloaded'} document ID: ${docId}`
+    });
+
+    res.json({ success: true });
+  });
+
+  app.get('/api/admin/logs', authenticateToken, async (req, res) => {
+    const user = (req as any).user;
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
+    }
+    const logs = await storage.getAuditLogs();
+    res.json(logs);
+  });
+
+  app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+    const user = (req as any).user;
+    await storage.createAuditLog({
+      userId: user.id,
+      username: user.username,
+      action: 'logout',
+      details: 'User logged out'
+    });
+    res.json({ success: true });
   });
 
   // Seed Admin User

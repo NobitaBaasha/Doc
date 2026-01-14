@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { users, documents, type User, type InsertUser, type Document, type InsertDocument } from "@shared/schema";
-import { eq, or, arrayContains } from "drizzle-orm";
+import { users, documents, auditLogs, type User, type InsertUser, type Document, type InsertDocument, type AuditLog, type InsertAuditLog } from "@shared/schema";
+import { eq, or, arrayContains, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -10,6 +10,9 @@ export interface IStorage {
   createDocument(doc: InsertDocument): Promise<Document>;
   getDocuments(userRole: string): Promise<Document[]>;
   getAllDocuments(): Promise<Document[]>;
+
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogs(): Promise<AuditLog[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -45,6 +48,15 @@ export class DatabaseStorage implements IStorage {
 
   async getAllDocuments(): Promise<Document[]> {
     return await db.select().from(documents);
+  }
+
+  async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {
+    const [newLog] = await db.insert(auditLogs).values(log).returning();
+    return newLog;
+  }
+
+  async getAuditLogs(): Promise<AuditLog[]> {
+    return await db.select().from(auditLogs).orderBy(desc(auditLogs.timestamp));
   }
 }
 

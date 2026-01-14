@@ -49,6 +49,26 @@ export const api = {
         401: errorSchemas.unauthorized,
       },
     },
+    logAccess: {
+      method: 'POST' as const,
+      path: '/api/documents/:id/log',
+      input: z.object({ action: z.enum(['view', 'download']) }),
+      responses: {
+        200: z.object({ success: z.boolean() }),
+        401: errorSchemas.unauthorized,
+      },
+    },
+  },
+  admin: {
+    logs: {
+      method: 'GET' as const,
+      path: '/api/admin/logs',
+      responses: {
+        200: z.array(z.custom<typeof auditLogs.$inferSelect>()),
+        401: errorSchemas.unauthorized,
+        403: errorSchemas.forbidden,
+      },
+    },
   },
 };
 
