@@ -35,24 +35,35 @@ export default function Dashboard() {
 
   const getDownloadUrl = (url: string, filename: string) => {
     if (!url.includes('res.cloudinary.com')) return url;
-    if (filename.toLowerCase().endsWith('.pdf')) {
-      // For raw files (PDFs), we add fl_attachment to the path if it's missing
-      if (!url.includes('/fl_attachment')) {
-        return url.replace('/upload/', '/upload/fl_attachment/');
-      }
-      return url;
+    
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext || '');
+    
+    if (isImage) {
+      // For images, we can use fl_attachment to force download
+      return url.includes('/fl_attachment') ? url : url.replace('/upload/', '/upload/fl_attachment/');
     }
-    // For images
-    if (!url.includes('/fl_attachment')) {
-      return url.replace('/upload/', '/upload/fl_attachment/');
-    }
-    return url;
+    
+    // For docs, txt, zip, csv, pdf, etc.
+    // If it's already a raw file, it might not have /upload/ but /raw/upload/
+    const uploadPath = url.includes('/raw/upload/') ? '/raw/upload/' : '/upload/';
+    const attachmentPath = uploadPath + 'fl_attachment/';
+    
+    return url.includes('/fl_attachment') ? url : url.replace(uploadPath, attachmentPath);
   };
 
   const getViewUrl = (url: string, filename: string) => {
     if (!url.includes('res.cloudinary.com')) return url;
-    // Ensure fl_attachment is REMOVED for viewing
-    return url.replace('/fl_attachment', '');
+    
+    const ext = filename.split('.').pop()?.toLowerCase();
+    const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext || '');
+    const isViewable = ['pdf', 'txt', 'csv'].includes(ext || '') || isImage;
+    
+    let viewUrl = url.replace('/fl_attachment', '');
+    
+    // If it's not an image or specifically viewable type, most browsers will download it anyway
+    // but we ensure fl_attachment is gone so the browser at least tries to handle it inline
+    return viewUrl;
   };
 
   const handleDelete = async (id: number) => {
