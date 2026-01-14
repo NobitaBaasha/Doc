@@ -29,6 +29,10 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
 
+  const filteredDocs = documents?.filter(doc => 
+    doc.filename.toLowerCase().includes(search.toLowerCase())
+  );
+
   const getDownloadUrl = (url: string, filename: string) => {
     if (!url.includes('res.cloudinary.com')) return url;
     if (filename.toLowerCase().endsWith('.pdf')) {
