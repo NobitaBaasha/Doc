@@ -55,14 +55,13 @@ export default function Dashboard() {
   const getViewUrl = (url: string, filename: string) => {
     if (!url.includes('res.cloudinary.com')) return url;
     
-    const ext = filename.split('.').pop()?.toLowerCase();
-    const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext || '');
-    const isViewable = ['pdf', 'txt', 'csv'].includes(ext || '') || isImage;
+    // Cloudinary delivery URLs for images and raw files (PDFs, txt, etc)
+    // Images: https://res.cloudinary.com/<cloud_name>/image/upload/<options>/<public_id>
+    // Raw: https://res.cloudinary.com/<cloud_name>/raw/upload/<options>/<public_id>
     
     let viewUrl = url.replace('/fl_attachment', '');
     
-    // If it's not an image or specifically viewable type, most browsers will download it anyway
-    // but we ensure fl_attachment is gone so the browser at least tries to handle it inline
+    // Ensure we don't have any transformation that forces download
     return viewUrl;
   };
 

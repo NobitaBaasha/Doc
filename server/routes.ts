@@ -43,10 +43,12 @@ export async function registerRoutes(
       cloudinary: cloudinary,
       params: async (req, file) => {
         const isPDF = file.mimetype === 'application/pdf';
+        const isImage = file.mimetype.startsWith('image/');
         return {
           folder: 'documents',
-          resource_type: isPDF ? 'raw' : 'auto',
-          flags: 'attachment'
+          resource_type: isPDF ? 'raw' : (isImage ? 'image' : 'auto'),
+          // Remove flags: 'attachment' from here to store clean URLs
+          // We handle attachment flag in the frontend for downloads
         };
       },
     }) : multer.memoryStorage() // Fallback if no cloudinary creds yet
