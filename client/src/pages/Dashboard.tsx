@@ -3,7 +3,8 @@ import { useDocuments } from "@/hooks/use-documents";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UploadDialog } from "@/components/UploadDialog";
-import { LogOut, FileText, Download, Shield, User, Search, Clock, Eye } from "lucide-react";
+import { LogOut, FileText, Download, Shield, User, Search, Clock, Eye, Activity } from "lucide-react";
+import { AuditLogDialog } from "@/components/AuditLogDialog";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ export default function Dashboard() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            {user?.role === "admin" && <AuditLogDialog />}
             <UploadDialog />
           </div>
         </div>
