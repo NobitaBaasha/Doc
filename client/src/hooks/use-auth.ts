@@ -1,9 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { api } from "@shared/routes";
 import { useLocation } from "wouter";
 import { authFetch } from "@/lib/api";
 import { z } from "zod";
 import { useState, useEffect } from "react";
+import { queryClient } from "@/lib/queryClient";
 
 // Types derived from schema
 type LoginInput = z.infer<typeof api.auth.login.input>;
