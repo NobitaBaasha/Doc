@@ -3,7 +3,7 @@ import { useDocuments } from "@/hooks/use-documents";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UploadDialog } from "@/components/UploadDialog";
-import { LogOut, FileText, Download, Shield, User, Search, Clock } from "lucide-react";
+import { LogOut, FileText, Download, Shield, User, Search, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -115,8 +115,13 @@ export default function Dashboard() {
                   className="group relative"
                 >
                   <Card className="h-full hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 overflow-hidden bg-card/50 backdrop-blur-sm">
-                    <div className="absolute top-0 right-0 p-4 transition-opacity">
-                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild>
+                    <div className="absolute top-0 right-0 p-4 flex gap-2 transition-opacity">
+                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="View">
+                        <a href={doc.fileUrl.replace('fl_attachment/', '')} target="_blank" rel="noopener noreferrer">
+                          <Eye className="h-4 w-4" />
+                        </a>
+                      </Button>
+                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="Download">
                         <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
                           <Download className="h-4 w-4" />
                         </a>
