@@ -150,12 +150,34 @@ export default function Dashboard() {
                   <Card className="h-full hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 overflow-hidden bg-card/50 backdrop-blur-sm">
                     <div className="absolute top-0 right-0 p-4 flex gap-2 transition-opacity">
                       <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="View">
-                        <a href={doc.fileUrl.replace('fl_attachment/', '')} target="_blank" rel="noopener noreferrer">
+                        <a 
+                          href={doc.fileUrl.replace('fl_attachment/', '')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={async (e) => {
+                            try {
+                              await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'view' });
+                            } catch (err) {
+                              console.error("Failed to log view:", err);
+                            }
+                          }}
+                        >
                           <Eye className="h-4 w-4" />
                         </a>
                       </Button>
                       <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="Download">
-                        <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer">
+                        <a 
+                          href={doc.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          onClick={async (e) => {
+                            try {
+                              await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'download' });
+                            } catch (err) {
+                              console.error("Failed to log download:", err);
+                            }
+                          }}
+                        >
                           <Download className="h-4 w-4" />
                         </a>
                       </Button>

@@ -81,6 +81,7 @@ export function useAuth() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    queryClient.clear();
     setLocation("/login");
   };
 

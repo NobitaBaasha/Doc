@@ -42,10 +42,11 @@ export async function registerRoutes(
     storage: process.env.CLOUDINARY_CLOUD_NAME ? new CloudinaryStorage({
       cloudinary: cloudinary,
       params: async (req, file) => {
+        const isPDF = file.mimetype === 'application/pdf';
         return {
           folder: 'documents',
-          resource_type: 'auto', // Important for PDF/Raw files
-          flags: 'attachment' // This can sometimes help with direct downloads
+          resource_type: isPDF ? 'raw' : 'auto',
+          flags: 'attachment'
         };
       },
     }) : multer.memoryStorage() // Fallback if no cloudinary creds yet
