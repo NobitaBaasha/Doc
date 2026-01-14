@@ -72,9 +72,14 @@ export function AuditLogDialog() {
                       {log.timestamp ? format(new Date(log.timestamp), "MMM d, HH:mm:ss") : "N/A"}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-3 w-3 text-muted-foreground" />
-                        <span className="font-medium">{log.username || "System"}</span>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3 w-3 text-muted-foreground" />
+                          <span className="font-medium text-sm">{log.username || "System"}</span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground ml-5">
+                          UID: {log.userId}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
