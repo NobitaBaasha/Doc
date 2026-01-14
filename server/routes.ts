@@ -41,9 +41,13 @@ export async function registerRoutes(
   const upload = multer({
     storage: process.env.CLOUDINARY_CLOUD_NAME ? new CloudinaryStorage({
       cloudinary: cloudinary,
-      params: {
-        folder: 'documents',
-      } as any,
+      params: async (req, file) => {
+        return {
+          folder: 'documents',
+          resource_type: 'auto', // Important for PDF/Raw files
+          flags: 'attachment' // This can sometimes help with direct downloads
+        };
+      },
     }) : multer.memoryStorage() // Fallback if no cloudinary creds yet
   });
 
