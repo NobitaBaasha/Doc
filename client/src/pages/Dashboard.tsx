@@ -3,8 +3,21 @@ import { useDocuments } from "@/hooks/use-documents";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { UploadDialog } from "@/components/UploadDialog";
-import { LogOut, FileText, Download, Shield, User, Search, Clock, Eye, Activity } from "lucide-react";
+import { LogOut, FileText, Download, Shield, User, Search, Clock, Eye, Activity, Trash2 } from "lucide-react";
 import { AuditLogDialog } from "@/components/AuditLogDialog";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -14,10 +27,28 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const { data: documents, isLoading, error } = useDocuments();
   const [search, setSearch] = useState("");
+  const { toast } = useToast();
 
   const filteredDocs = documents?.filter(doc => 
     doc.filename.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleDelete = async (id: number) => {
+    try {
+      await apiRequest("DELETE", `/api/documents/${id}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({
+        title: "Success",
+        description: "Document deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,6 +159,29 @@ export default function Dashboard() {
                           <Download className="h-4 w-4" />
                         </a>
                       </Button>
+                      {(user?.role === "admin" || doc.uploadedBy === user?.id) && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="destructive" className="h-8 w-8 rounded-full shadow-sm" title="Delete">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the document from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(doc.id)} className="bg-destructive text-destructive-foreground">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                     
                     <div className="p-6 flex flex-col h-full">

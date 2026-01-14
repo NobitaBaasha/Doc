@@ -10,6 +10,7 @@ export interface IStorage {
   createDocument(doc: InsertDocument): Promise<Document>;
   getDocuments(userRole: string): Promise<Document[]>;
   getAllDocuments(): Promise<Document[]>;
+  deleteDocument(id: number): Promise<void>;
 
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(): Promise<AuditLog[]>;
@@ -48,6 +49,10 @@ export class DatabaseStorage implements IStorage {
 
   async getAllDocuments(): Promise<Document[]> {
     return await db.select().from(documents);
+  }
+
+  async deleteDocument(id: number): Promise<void> {
+    await db.delete(documents).where(eq(documents.id, id));
   }
 
   async createAuditLog(log: InsertAuditLog): Promise<AuditLog> {
