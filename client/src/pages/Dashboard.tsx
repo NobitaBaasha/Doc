@@ -29,9 +29,27 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
 
-  const filteredDocs = documents?.filter(doc => 
-    doc.filename.toLowerCase().includes(search.toLowerCase())
-  );
+  const getDownloadUrl = (url: string, filename: string) => {
+    if (!url.includes('res.cloudinary.com')) return url;
+    if (filename.toLowerCase().endsWith('.pdf')) {
+      // For raw files (PDFs), we add fl_attachment to the path if it's missing
+      if (!url.includes('/fl_attachment')) {
+        return url.replace('/upload/', '/upload/fl_attachment/');
+      }
+      return url;
+    }
+    // For images
+    if (!url.includes('/fl_attachment')) {
+      return url.replace('/upload/', '/upload/fl_attachment/');
+    }
+    return url;
+  };
+
+  const getViewUrl = (url: string, filename: string) => {
+    if (!url.includes('res.cloudinary.com')) return url;
+    // Ensure fl_attachment is REMOVED for viewing
+    return url.replace('/fl_attachment', '');
+  };
 
   const handleDelete = async (id: number) => {
     try {
@@ -151,7 +169,7 @@ export default function Dashboard() {
                     <div className="absolute top-0 right-0 p-4 flex gap-2 transition-opacity">
                       <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="View">
                         <a 
-                          href={doc.fileUrl.replace('fl_attachment/', '')} 
+                          href={getViewUrl(doc.fileUrl, doc.filename)} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           onClick={async (e) => {
@@ -167,7 +185,7 @@ export default function Dashboard() {
                       </Button>
                       <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="Download">
                         <a 
-                          href={doc.fileUrl} 
+                          href={getDownloadUrl(doc.fileUrl, doc.filename)} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           onClick={async (e) => {

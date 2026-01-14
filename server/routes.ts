@@ -117,12 +117,15 @@ export async function registerRoutes(
       const user = (req as any).user;
       const allowedRoles = req.body.allowedRoles ? JSON.parse(req.body.allowedRoles) : ['admin']; // Default to admin only if not specified
       
-      // If cloudinary is not configured, we mock the url
-      let fileUrl = (req.file as any).path || `https://mock-storage.com/${req.file.originalname}`;
+      // Get the correct URL from Cloudinary response
+      // For resource_type: 'raw', we should use the secure_url
+      let fileUrl = (req.file as any).path || (req.file as any).secure_url || `https://mock-storage.com/${req.file.originalname}`;
       
-      // Force attachment for download by adding fl_attachment to Cloudinary URL
-      if (fileUrl.includes('res.cloudinary.com')) {
-        fileUrl = fileUrl.replace('/upload/', '/upload/fl_attachment/');
+      // If it's a PDF and not already marked as raw in the URL, we might need to adjust it
+      // However, CloudinaryStorage usually returns the correct URL if resource_type: 'raw' was used
+      if (fileUrl.includes('res.cloudinary.com') && req.file.mimetype === 'application/pdf') {
+        // Ensure it doesn't have fl_attachment for the "view" URL if we want it to open in browser
+        // We'll store the clean URL and handle fl_attachment in the frontend if needed for download
       }
 
       const doc = await storage.createDocument({
