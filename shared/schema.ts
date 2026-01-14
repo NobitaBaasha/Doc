@@ -22,8 +22,9 @@ export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id"),
   username: text("username"),
-  action: text("action").notNull(), // 'login', 'logout', 'upload', 'view', 'download'
+  action: text("action").notNull(), // 'login', 'logout', 'upload', 'view', 'download', 'delete'
   details: text("details"),
+  documentName: text("document_name"),
   timestamp: timestamp("timestamp").defaultNow(),
 });
 

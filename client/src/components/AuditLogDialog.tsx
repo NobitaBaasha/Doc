@@ -48,19 +48,20 @@ export function AuditLogDialog() {
                 <TableHead className="w-[180px]">Timestamp</TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Action</TableHead>
+                <TableHead>Document</TableHead>
                 <TableHead>Details</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     Loading logs...
                   </TableCell>
                 </TableRow>
               ) : logs?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     No activity logs found.
                   </TableCell>
                 </TableRow>
@@ -85,6 +86,9 @@ export function AuditLogDialog() {
                       }`}>
                         {log.action}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-sm font-medium">
+                      {log.documentName || "-"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {log.details}

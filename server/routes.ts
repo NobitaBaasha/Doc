@@ -135,7 +135,8 @@ export async function registerRoutes(
         userId: user.id,
         username: user.username,
         action: 'upload',
-        details: `Uploaded file: ${req.file.originalname} (ID: ${doc.id})`
+        details: `Uploaded file: ${req.file.originalname}`,
+        documentName: req.file.originalname
       });
 
       res.status(201).json(doc);
@@ -155,15 +156,18 @@ export async function registerRoutes(
     const user = (req as any).user;
     const docId = parseInt(req.params.id);
     
-    // In a real app, we'd check if the user is authorized to delete this specific doc
-    // For now, let's allow it if they can see it (or just let admins/uploaders do it)
+    // Get document first to have the filename for the audit log
+    const docs = await storage.getAllDocuments();
+    const doc = docs.find(d => d.id === docId);
+
     await storage.deleteDocument(docId);
 
     await storage.createAuditLog({
       userId: user.id,
       username: user.username,
       action: 'delete',
-      details: `Deleted document ID: ${docId}`
+      details: `Deleted document: ${doc?.filename || 'Unknown'}`,
+      documentName: doc?.filename
     });
 
     res.json({ success: true });
@@ -172,13 +176,17 @@ export async function registerRoutes(
   app.post('/api/documents/:id/log', authenticateToken, async (req, res) => {
     const user = (req as any).user;
     const { action } = req.body;
-    const docId = req.params.id;
+    const docId = parseInt(req.params.id);
+
+    const docs = await storage.getAllDocuments();
+    const doc = docs.find(d => d.id === docId);
 
     await storage.createAuditLog({
       userId: user.id,
       username: user.username,
       action: action,
-      details: `${action === 'view' ? 'Viewed' : 'Downloaded'} document ID: ${docId}`
+      details: `${action === 'view' ? 'Viewed' : 'Downloaded'} document: ${doc?.filename || 'Unknown'}`,
+      documentName: doc?.filename
     });
 
     res.json({ success: true });
