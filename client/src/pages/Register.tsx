@@ -99,13 +99,14 @@ export default function Register() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="employee">Employee</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
                   )}
                 />
                 <p className="text-[0.8rem] text-muted-foreground">
-                  Admins can see all documents. Employees only see their own.
+                  Admins see everything. Managers see employees activity. Employees see assigned files.
                 </p>
               </div>
 

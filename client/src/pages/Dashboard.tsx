@@ -135,7 +135,7 @@ export default function Dashboard() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            {user?.role === "admin" && <AuditLogDialog />}
+            {(user?.role === "admin" || user?.role === "manager") && <AuditLogDialog />}
             <UploadDialog />
           </div>
         </div>

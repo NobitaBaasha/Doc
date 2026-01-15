@@ -200,10 +200,10 @@ export async function registerRoutes(
 
   app.get('/api/admin/logs', authenticateToken, async (req, res) => {
     const user = (req as any).user;
-    if (user.role !== 'admin') {
-      return res.status(403).json({ message: "Admin access required" });
+    if (user.role !== 'admin' && user.role !== 'manager') {
+      return res.status(403).json({ message: "Access required" });
     }
-    const logs = await storage.getAuditLogs();
+    const logs = await storage.getAuditLogs(user.role);
     res.json(logs);
   });
 

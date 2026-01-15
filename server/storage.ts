@@ -13,7 +13,7 @@ export interface IStorage {
   deleteDocument(id: number): Promise<void>;
 
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
-  getAuditLogs(): Promise<AuditLog[]>;
+  getAuditLogs(userRole?: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -60,8 +60,29 @@ export class DatabaseStorage implements IStorage {
     return newLog;
   }
 
-  async getAuditLogs(): Promise<AuditLog[]> {
-    return await db.select().from(auditLogs).orderBy(desc(auditLogs.timestamp));
+  async getAuditLogs(userRole?: string): Promise<any[]> {
+    if (userRole === 'admin') {
+      return await db.select().from(auditLogs).orderBy(desc(auditLogs.timestamp));
+    }
+    
+    if (userRole === 'manager') {
+      // Join with users to only get logs for employees
+      return await db.select({
+        id: auditLogs.id,
+        userId: auditLogs.userId,
+        username: auditLogs.username,
+        action: auditLogs.action,
+        details: auditLogs.details,
+        documentName: auditLogs.documentName,
+        timestamp: auditLogs.timestamp,
+      })
+      .from(auditLogs)
+      .innerJoin(users, eq(auditLogs.userId, users.id))
+      .where(eq(users.role, 'employee'))
+      .orderBy(desc(auditLogs.timestamp));
+    }
+
+    return [];
   }
 }
 

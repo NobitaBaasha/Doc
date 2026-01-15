@@ -35,8 +35,10 @@ export function UploadDialog() {
     // In a more complex app, this might be a multi-select
     // Always allow admin to see it + the selected target role
     const roles = ["admin"];
-    if (targetRole === "employee" && !roles.includes("employee")) {
-      roles.push("employee");
+    if (targetRole === "employee") {
+      roles.push("manager", "employee");
+    } else if (targetRole === "manager") {
+      roles.push("manager");
     }
     
     // Append as JSON string or individual fields depending on backend expectation
@@ -124,7 +126,7 @@ export function UploadDialog() {
               )}
             </div>
 
-            {user?.role === "admin" && (
+            {(user?.role === "admin" || user?.role === "manager") && (
               <div className="space-y-2">
                 <Label>Who can view this?</Label>
                 <Select value={targetRole} onValueChange={setTargetRole}>
@@ -132,7 +134,8 @@ export function UploadDialog() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="employee">All Employees & Admins</SelectItem>
+                    <SelectItem value="employee">All Employees, Managers & Admins</SelectItem>
+                    <SelectItem value="manager">Managers & Admins Only</SelectItem>
                     <SelectItem value="admin">Admins Only</SelectItem>
                   </SelectContent>
                 </Select>
