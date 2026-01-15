@@ -23,6 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 export function AuditLogDialog() {
   const { data: logs, isLoading } = useQuery<AuditLog[]>({
     queryKey: ["/api/admin/logs"],
+    refetchInterval: 3000, // Poll every 3 seconds for real-time updates
   });
 
   return (

@@ -66,6 +66,9 @@ export default function Dashboard() {
     try {
       await apiRequest("DELETE", `/api/documents/${id}`);
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      if (user?.role === 'admin') {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
+      }
       toast({
         title: "Success",
         description: "Document deleted successfully",
@@ -186,6 +189,9 @@ export default function Dashboard() {
                           onClick={async (e) => {
                             try {
                               await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'view' });
+                              if (user?.role === 'admin') {
+                                queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
+                              }
                             } catch (err) {
                               console.error("Failed to log view:", err);
                             }
@@ -202,6 +208,9 @@ export default function Dashboard() {
                           onClick={async (e) => {
                             try {
                               await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'download' });
+                              if (user?.role === 'admin') {
+                                queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
+                              }
                             } catch (err) {
                               console.error("Failed to log download:", err);
                             }

@@ -8,6 +8,7 @@ import { useUploadDocument } from "@/hooks/use-documents";
 import { useAuth } from "@/hooks/use-auth";
 import { Upload, FileText, Loader2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 export function UploadDialog() {
   const [open, setOpen] = useState(false);
@@ -47,6 +48,9 @@ export function UploadDialog() {
 
     try {
       await upload.mutateAsync(formData);
+      if (user?.role === 'admin') {
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
+      }
       toast({
         title: "Success",
         description: "Document uploaded successfully",
