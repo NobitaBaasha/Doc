@@ -84,16 +84,19 @@ export function AuditLogDialog() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          log.action === 'login' ? 'bg-green-100 text-green-700' :
-                          log.action === 'upload' ? 'bg-blue-100 text-blue-700' :
-                          log.action === 'delete' ? 'bg-red-100 text-red-700' :
-                          'bg-slate-100 text-slate-700'
-                        }`}>
-                          {log.action}
-                        </span>
-                      </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shadow-sm ${
+                        log.action === 'login' ? 'bg-emerald-100 text-green-700 border border-emerald-200' :
+                        log.action === 'upload' ? 'bg-sky-100 text-blue-700 border border-sky-200' :
+                        log.action === 'delete' ? 'bg-rose-100 text-red-700 border border-rose-200' :
+                        log.action === 'view' ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                        log.action === 'download' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' :
+                        log.action === 'logout' ? 'bg-slate-200 text-slate-700 border border-slate-300' :
+                        'bg-slate-100 text-slate-700'
+                      }`}>
+                        {log.action}
+                      </span>
+                    </TableCell>
                       <TableCell className="text-sm font-medium">
                         {log.documentName || "-"}
                       </TableCell>
