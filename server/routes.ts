@@ -23,10 +23,14 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
   });
 };
 
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Register App Storage routes
+  registerObjectStorageRoutes(app);
 
   // Cloudinary Config
   if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -109,30 +113,14 @@ export async function registerRoutes(
     }
   });
 
-  // Document Routes
-  app.post(api.documents.upload.path, authenticateToken, upload.single('file'), async (req, res) => {
+  app.post("/api/documents", authenticateToken, async (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
       const user = (req as any).user;
-      const allowedRoles = req.body.allowedRoles ? JSON.parse(req.body.allowedRoles) : ['admin']; // Default to admin only if not specified
+      const { filename, fileUrl, allowedRoles } = req.body;
       
-      // Get the correct URL from Cloudinary response
-      // For resource_type: 'raw', we should use the secure_url
-      let fileUrl = (req.file as any).path || (req.file as any).secure_url || `https://mock-storage.com/${req.file.originalname}`;
-      
-      // If it's a PDF and not already marked as raw in the URL, we might need to adjust it
-      // However, CloudinaryStorage usually returns the correct URL if resource_type: 'raw' was used
-      if (fileUrl.includes('res.cloudinary.com') && req.file.mimetype === 'application/pdf') {
-        // Ensure it doesn't have fl_attachment for the "view" URL if we want it to open in browser
-        // We'll store the clean URL and handle fl_attachment in the frontend if needed for download
-      }
-
       const doc = await storage.createDocument({
-        filename: req.file.originalname,
-        fileUrl: fileUrl,
+        filename,
+        fileUrl,
         uploadedBy: user.id,
         allowedRoles: Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles],
       });
@@ -141,14 +129,14 @@ export async function registerRoutes(
         userId: user.id,
         username: user.username,
         action: 'upload',
-        details: `Uploaded file: ${req.file.originalname}`,
-        documentName: req.file.originalname
+        details: `Uploaded file: ${filename}`,
+        documentName: filename
       });
 
       res.status(201).json(doc);
     } catch (err) {
       console.error(err);
-      res.status(500).json({ message: "Upload failed" });
+      res.status(500).json({ message: "Save failed" });
     }
   });
 

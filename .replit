@@ -44,3 +44,6 @@ waitForPort = 5000
 CLOUDINARY_CLOUD_NAME = "djgb0whig"
 CLOUDINARY_API_KEY = "773931933673924"
 CLOUDINARY_API_SECRET = "pgWU3r7vzUO1mEqi1UMgKggnc0Q"
+
+[agent]
+integrations = ["javascript_object_storage:2.0.0"]
