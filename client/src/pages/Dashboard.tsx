@@ -24,11 +24,14 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Document } from "@shared/schema";
 
+import { TeamManagement } from "@/components/TeamManagement";
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const { data: documents, isLoading, error } = useDocuments();
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const [view, setView] = useState<'documents' | 'teams'>('documents');
 
   const filteredDocs = (documents as Document[] | undefined)?.filter(doc => 
     doc.filename.toLowerCase().includes(search.toLowerCase())
@@ -143,30 +146,46 @@ export default function Dashboard() {
       <main className="container mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-foreground">Documents</h1>
-            <p className="text-muted-foreground mt-1">
-              Manage and access your secure files
-            </p>
+          <div className="flex items-center gap-4">
+            <Button 
+              variant={view === 'documents' ? 'default' : 'ghost'} 
+              onClick={() => setView('documents')}
+              className="text-xl font-display font-bold"
+            >
+              Documents
+            </Button>
+            {(user?.role === 'admin' || user?.role === 'manager') && (
+              <Button 
+                variant={view === 'teams' ? 'default' : 'ghost'} 
+                onClick={() => setView('teams')}
+                className="text-xl font-display font-bold"
+              >
+                Teams
+              </Button>
+            )}
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative w-full md:w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search files..." 
-                className="pl-9 bg-background"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+            {view === 'documents' && (
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search files..." 
+                  className="pl-9 bg-background"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            )}
             {(user?.role === "admin" || user?.role === "manager") && <AuditLogDialog />}
-            <UploadDialog />
+            {view === 'documents' && <UploadDialog />}
           </div>
         </div>
 
         {/* Content Area */}
         <div className="space-y-6">
-          {isLoading ? (
+          {view === 'teams' ? (
+            <TeamManagement />
+          ) : isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <Card key={i} className="h-48 animate-pulse bg-muted/50 border-transparent" />

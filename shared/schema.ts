@@ -28,10 +28,32 @@ export const auditLogs = pgTable("audit_logs", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+export const teams = pgTable("teams", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdBy: integer("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull(),
+  userId: integer("user_id").notNull(),
+  role: text("role").notNull(), // 'manager' | 'employee'
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+export const insertTeamSchema = createInsertSchema(teams);
+export const insertTeamMemberSchema = createInsertSchema(teamMembers);
 export const insertUserSchema = createInsertSchema(users);
 export const insertDocumentSchema = createInsertSchema(documents);
 export const insertAuditLogSchema = createInsertSchema(auditLogs);
 
+export type Team = typeof teams.$inferSelect;
+export type InsertTeam = z.infer<typeof insertTeamSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Document = typeof documents.$inferSelect;

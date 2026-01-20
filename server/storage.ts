@@ -1,11 +1,12 @@
 import { db } from "./db";
-import { users, documents, auditLogs, type User, type InsertUser, type Document, type InsertDocument, type AuditLog, type InsertAuditLog } from "@shared/schema";
-import { eq, or, desc, sql } from "drizzle-orm";
+import { users, documents, auditLogs, teams, teamMembers, type User, type InsertUser, type Document, type InsertDocument, type AuditLog, type InsertAuditLog, type Team, type InsertTeam, type TeamMember, type InsertTeamMember } from "@shared/schema";
+import { eq, or, desc, sql, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getAllUsers(): Promise<User[]>;
   
   createDocument(doc: InsertDocument): Promise<Document>;
   getDocuments(userRole: string): Promise<Document[]>;
@@ -14,6 +15,11 @@ export interface IStorage {
 
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(userRole?: string): Promise<any[]>;
+
+  createTeam(team: InsertTeam): Promise<Team>;
+  addTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  getTeams(userId: number, role: string): Promise<any[]>;
+  getTeamMembers(teamId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -32,6 +38,10 @@ export class DatabaseStorage implements IStorage {
     return newUser;
   }
 
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
   async createDocument(doc: InsertDocument): Promise<Document> {
     const [newDoc] = await db.insert(documents).values(doc).returning();
     return newDoc;
@@ -41,9 +51,6 @@ export class DatabaseStorage implements IStorage {
     if (userRole === 'admin') {
       return this.getAllDocuments();
     }
-    // Filter by allowed roles
-    // We want documents where allowedRoles contains userRole
-    // Using sql query since arrayContains might be tricky with text[] depending on drizzle version
     return await db.select().from(documents).where(sql`${documents.allowedRoles} @> ARRAY[${userRole}]::text[]`);
   }
 
@@ -66,7 +73,6 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (userRole === 'manager') {
-      // Join with users to only get logs for employees
       return await db.select({
         id: auditLogs.id,
         userId: auditLogs.userId,
@@ -83,6 +89,39 @@ export class DatabaseStorage implements IStorage {
     }
 
     return [];
+  }
+
+  async createTeam(team: InsertTeam): Promise<Team> {
+    const [newTeam] = await db.insert(teams).values(team).returning();
+    return newTeam;
+  }
+
+  async addTeamMember(member: InsertTeamMember): Promise<TeamMember> {
+    const [newMember] = await db.insert(teamMembers).values(member).returning();
+    return newMember;
+  }
+
+  async getTeams(userId: number, role: string): Promise<any[]> {
+    if (role === 'admin') {
+      return await db.select().from(teams);
+    }
+    // For managers, show teams they created or are members of
+    return await db.select()
+      .from(teams)
+      .leftJoin(teamMembers, eq(teams.id, teamMembers.teamId))
+      .where(or(eq(teams.createdBy, userId), eq(teamMembers.userId, userId)));
+  }
+
+  async getTeamMembers(teamId: number): Promise<any[]> {
+    return await db.select({
+      id: teamMembers.id,
+      userId: teamMembers.userId,
+      username: users.username,
+      role: teamMembers.role,
+    })
+    .from(teamMembers)
+    .innerJoin(users, eq(teamMembers.userId, users.id))
+    .where(eq(teamMembers.teamId, teamId));
   }
 }
 

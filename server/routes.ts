@@ -195,15 +195,54 @@ export async function registerRoutes(
     res.json(logs);
   });
 
-  app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+  app.get('/api/teams', authenticateToken, async (req, res) => {
     const user = (req as any).user;
+    const teams = await storage.getTeams(user.id, user.role);
+    res.json(teams);
+  });
+
+  app.post('/api/teams', authenticateToken, async (req, res) => {
+    const user = (req as any).user;
+    if (user.role !== 'admin' && user.role !== 'manager') {
+      return res.status(403).json({ message: "Only admins and managers can create teams" });
+    }
+    const { name, description, memberIds } = req.body;
+    const team = await storage.createTeam({
+      name,
+      description,
+      createdBy: user.id
+    });
+
+    if (memberIds && Array.isArray(memberIds)) {
+      for (const memberId of memberIds) {
+        const memberUser = await storage.getUser(memberId);
+        if (memberUser) {
+          // Admin can add manager and employee, manager can only add employee
+          if (user.role === 'admin' || (user.role === 'manager' && memberUser.role === 'employee')) {
+            await storage.addTeamMember({
+              teamId: team.id,
+              userId: memberId,
+              role: memberUser.role
+            });
+          }
+        }
+      }
+    }
+
     await storage.createAuditLog({
       userId: user.id,
       username: user.username,
-      action: 'logout',
-      details: 'User logged out'
+      action: 'team_create',
+      details: `Created team: ${name}`
     });
-    res.json({ success: true });
+
+    res.status(201).json(team);
+  });
+
+  app.get('/api/users', authenticateToken, async (req, res) => {
+    const users = await storage.getAllUsers();
+    // Don't send passwords
+    res.json(users.map(u => ({ id: u.id, username: u.username, role: u.role })));
   });
 
   // Seed Admin User
