@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { Document } from "@shared/schema";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -29,44 +30,67 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const { toast } = useToast();
 
-  const filteredDocs = documents?.filter(doc => 
+  const filteredDocs = (documents as Document[] | undefined)?.filter(doc => 
     doc.filename.toLowerCase().includes(search.toLowerCase())
   );
 
-  const getDownloadUrl = (url: string, filename: string) => {
-    if (!url.includes('res.cloudinary.com')) return url;
-    
-    // Cloudinary uses 'fl_attachment' to force a download
-    // For 'raw' files (like PDFs), the URL looks like .../raw/upload/...
-    // For 'image' files, it looks like .../image/upload/...
-    
-    const isRaw = url.includes('/raw/upload/');
-    const base = isRaw ? '/raw/upload/' : '/image/upload/';
-    
-    if (url.includes('/fl_attachment')) return url;
-    return url.replace(base, `${base}fl_attachment/`);
+  const handleView = async (doc: Document) => {
+    try {
+      // For App Storage, URLs starting with /objects/ need to be fetched via proxy
+      const viewUrl = doc.fileUrl.startsWith('/objects/') 
+        ? `${window.location.origin}${doc.fileUrl}`
+        : doc.fileUrl.replace('fl_attachment/', '');
+      
+      window.open(viewUrl, '_blank');
+      await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'view' });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
+    } catch (error) {
+      console.error("Failed to log view:", error);
+    }
   };
 
-  const getViewUrl = (url: string, filename: string) => {
-    if (!url.includes('res.cloudinary.com')) return url;
-    
-    // Cloudinary delivery URLs for images and raw files (PDFs, txt, etc)
-    // Images: https://res.cloudinary.com/<cloud_name>/image/upload/<options>/<public_id>
-    // Raw: https://res.cloudinary.com/<cloud_name>/raw/upload/<options>/<public_id>
-    
-    // Remove fl_attachment and ensure we don't have transformations that force download
-    let viewUrl = url.replace('/fl_attachment', '');
-    
-    // For PDFs in 'raw' folder, Cloudinary often forces download unless specifically handled.
-    // However, for most browsers, removing fl_attachment is enough if the content-type is correct.
-    return viewUrl;
+  const handleDownload = async (doc: Document) => {
+    try {
+      let downloadUrl = doc.fileUrl;
+      
+      if (doc.fileUrl.startsWith('/objects/')) {
+        // App Storage: Use proxy endpoint
+        downloadUrl = `${window.location.origin}${doc.fileUrl}`;
+      } else if (doc.fileUrl.includes('res.cloudinary.com')) {
+        // Cloudinary specific: add fl_attachment for forced download
+        const isPdf = doc.filename.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+          if (!doc.fileUrl.includes('/raw/upload/')) {
+            downloadUrl = doc.fileUrl.replace('/upload/', '/upload/fl_attachment/');
+          } else if (!doc.fileUrl.includes('fl_attachment')) {
+            downloadUrl = doc.fileUrl.replace('/raw/upload/', '/raw/upload/fl_attachment/');
+          }
+        } else {
+          if (!doc.fileUrl.includes('fl_attachment')) {
+            downloadUrl = doc.fileUrl.replace('/upload/', '/upload/fl_attachment/');
+          }
+        }
+      }
+
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = doc.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'download' });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
+    } catch (error) {
+      console.error("Failed to log download:", error);
+    }
   };
 
   const handleDelete = async (id: number) => {
     try {
       await apiRequest("DELETE", `/api/documents/${id}`);
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      if (user?.role === 'admin') {
+      if (user?.role === 'admin' || user?.role === 'manager') {
         queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
       }
       toast({
@@ -181,43 +205,11 @@ export default function Dashboard() {
                 >
                   <Card className="h-full hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300 overflow-hidden bg-card/50 backdrop-blur-sm">
                     <div className="absolute top-0 right-0 p-4 flex gap-2 transition-opacity">
-                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="View">
-                        <a 
-                          href={getViewUrl(doc.fileUrl, doc.filename)} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          onClick={async (e) => {
-                            try {
-                              await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'view' });
-                              if (user?.role === 'admin') {
-                                queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
-                              }
-                            } catch (err) {
-                              console.error("Failed to log view:", err);
-                            }
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </a>
+                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" onClick={() => handleView(doc)} title="View">
+                        <Eye className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" asChild title="Download">
-                        <a 
-                          href={getDownloadUrl(doc.fileUrl, doc.filename)} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          onClick={async (e) => {
-                            try {
-                              await apiRequest("POST", `/api/documents/${doc.id}/log`, { action: 'download' });
-                              if (user?.role === 'admin') {
-                                queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
-                              }
-                            } catch (err) {
-                              console.error("Failed to log download:", err);
-                            }
-                          }}
-                        >
-                          <Download className="h-4 w-4" />
-                        </a>
+                      <Button size="icon" variant="secondary" className="h-8 w-8 rounded-full shadow-sm" onClick={() => handleDownload(doc)} title="Download">
+                        <Download className="h-4 w-4" />
                       </Button>
                       {(user?.role === "admin" || doc.uploadedBy === user?.id) && (
                         <AlertDialog>

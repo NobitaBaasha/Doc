@@ -4,18 +4,19 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUploadDocument } from "@/hooks/use-documents";
 import { useAuth } from "@/hooks/use-auth";
-import { Upload, FileText, Loader2, X } from "lucide-react";
+import { Upload, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useUpload } from "@/hooks/use-upload";
+import { apiRequest } from "@/lib/queryClient";
 
 export function UploadDialog() {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [targetRole, setTargetRole] = useState("employee");
   const { user } = useAuth();
-  const upload = useUploadDocument();
+  const { uploadFile, isUploading } = useUpload();
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,31 +29,28 @@ export function UploadDialog() {
     e.preventDefault();
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    
-    // We append allowedRoles. For this simple app, we can just allow the role selected
-    // In a more complex app, this might be a multi-select
-    // Always allow admin to see it + the selected target role
-    const roles = ["admin"];
-    if (targetRole === "employee") {
-      roles.push("manager", "employee");
-    } else if (targetRole === "manager") {
-      roles.push("manager");
-    }
-    
-    // Append as JSON string or individual fields depending on backend expectation
-    // Based on schema `text("allowed_roles").array()`, backend likely expects array
-    // Since we can't send array in FormData easily without convention, 
-    // let's send it as JSON string if backend parses it, or multiple entries
-    // Implementation Note 2 says: "Append allowedRoles as a JSON string or multiple values"
-    formData.append("allowedRoles", JSON.stringify(roles));
-
     try {
-      await upload.mutateAsync(formData);
-      if (user?.role === 'admin') {
+      const uploadRes = await uploadFile(file);
+      if (!uploadRes) throw new Error("Upload failed");
+      
+      const roles = ["admin"];
+      if (targetRole === "employee") {
+        roles.push("manager", "employee");
+      } else if (targetRole === "manager") {
+        roles.push("manager");
+      }
+
+      await apiRequest("POST", "/api/documents", {
+        filename: file.name,
+        fileUrl: uploadRes.objectPath,
+        allowedRoles: roles,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      if (user?.role === 'admin' || user?.role === 'manager') {
         queryClient.invalidateQueries({ queryKey: ["/api/admin/logs"] });
       }
+
       toast({
         title: "Success",
         description: "Document uploaded successfully",
@@ -145,8 +143,8 @@ export function UploadDialog() {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={!file || upload.isPending}>
-              {upload.isPending ? (
+            <Button type="submit" disabled={!file || isUploading}>
+              {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Uploading...

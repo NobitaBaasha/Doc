@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { users, documents, auditLogs, type User, type InsertUser, type Document, type InsertDocument, type AuditLog, type InsertAuditLog } from "@shared/schema";
-import { eq, or, arrayContains, desc } from "drizzle-orm";
+import { eq, or, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -42,9 +42,9 @@ export class DatabaseStorage implements IStorage {
       return this.getAllDocuments();
     }
     // Filter by allowed roles
-    // Drizzle's array handling for text[]:
     // We want documents where allowedRoles contains userRole
-    return await db.select().from(documents).where(arrayContains(documents.allowedRoles, [userRole]));
+    // Using sql query since arrayContains might be tricky with text[] depending on drizzle version
+    return await db.select().from(documents).where(sql`${documents.allowedRoles} @> ARRAY[${userRole}]::text[]`);
   }
 
   async getAllDocuments(): Promise<Document[]> {
