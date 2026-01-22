@@ -276,7 +276,7 @@ export default function Dashboard() {
                           ID: {doc.id}
                         </span>
                         <span>
-                          By User #{doc.uploadedBy}
+                          By {(doc as any).uploaderName || `User #${doc.uploadedBy}`}
                         </span>
                       </div>
                     </div>

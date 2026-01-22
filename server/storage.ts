@@ -47,15 +47,38 @@ export class DatabaseStorage implements IStorage {
     return newDoc;
   }
 
-  async getDocuments(userRole: string): Promise<Document[]> {
+  async getDocuments(userRole: string): Promise<any[]> {
+    const baseQuery = db.select({
+      id: documents.id,
+      filename: documents.filename,
+      fileUrl: documents.fileUrl,
+      uploadedBy: documents.uploadedBy,
+      uploaderName: users.username,
+      allowedRoles: documents.allowedRoles,
+      createdAt: documents.createdAt,
+    })
+    .from(documents)
+    .innerJoin(users, eq(documents.uploadedBy, users.id));
+
     if (userRole === 'admin') {
-      return this.getAllDocuments();
+      return await baseQuery;
     }
-    return await db.select().from(documents).where(sql`${documents.allowedRoles} @> ARRAY[${userRole}]::text[]`);
+
+    return await baseQuery.where(sql`${documents.allowedRoles} @> ARRAY[${userRole}]::text[]`);
   }
 
-  async getAllDocuments(): Promise<Document[]> {
-    return await db.select().from(documents);
+  async getAllDocuments(): Promise<any[]> {
+    return await db.select({
+      id: documents.id,
+      filename: documents.filename,
+      fileUrl: documents.fileUrl,
+      uploadedBy: documents.uploadedBy,
+      uploaderName: users.username,
+      allowedRoles: documents.allowedRoles,
+      createdAt: documents.createdAt,
+    })
+    .from(documents)
+    .innerJoin(users, eq(documents.uploadedBy, users.id));
   }
 
   async deleteDocument(id: number): Promise<void> {
