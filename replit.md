@@ -1,8 +1,8 @@
-# SecureDocs
+# DocVault
 
 ## Overview
 
-SecureDocs is a role-based document management system that allows organizations to securely upload, store, and share documents with role-based access control. The application features user authentication with JWT tokens, document uploads via Cloudinary, and comprehensive audit logging for compliance tracking.
+DocVault is a role-based document management system that allows organizations to securely upload, store, and share documents with role-based access control. The application features user authentication with JWT tokens, document uploads via Cloudinary, and comprehensive audit logging for compliance tracking.
 
 ## User Preferences
 

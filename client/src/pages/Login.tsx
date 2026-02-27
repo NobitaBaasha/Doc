@@ -48,7 +48,7 @@ export default function Login() {
             <ShieldCheck className="w-6 h-6" />
           </div>
           <h1 className="text-3xl font-bold font-display tracking-tight text-foreground">
-            SecureDocs
+            DocVault
           </h1>
           <p className="text-muted-foreground mt-2">
             Enterprise Document Management

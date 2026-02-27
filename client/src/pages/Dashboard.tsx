@@ -118,7 +118,7 @@ export default function Dashboard() {
             <div className="bg-primary/10 p-2 rounded-lg">
               <Shield className="h-5 w-5 text-primary" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">SecureDocs</span>
+            <span className="font-display font-bold text-xl tracking-tight">DocVault</span>
           </div>
 
           <div className="flex items-center gap-4">

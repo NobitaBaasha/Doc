@@ -47,7 +47,7 @@ export default function Register() {
             Create Account
           </h1>
           <p className="text-muted-foreground mt-2">
-            Join SecureDocs Organization
+            Join DocVault Organization
           </p>
         </div>
 
