@@ -14,6 +14,8 @@ import { motion } from "framer-motion";
 const loginSchema = api.auth.login.input;
 type LoginForm = z.infer<typeof loginSchema>;
 
+import { ThemeToggle } from "@/components/theme-toggle";
+
 export default function Login() {
   const { login } = useAuth();
   
@@ -31,6 +33,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       {/* Decorative background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />

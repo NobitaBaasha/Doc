@@ -15,6 +15,8 @@ import { motion } from "framer-motion";
 const registerSchema = api.auth.register.input;
 type RegisterForm = z.infer<typeof registerSchema>;
 
+import { ThemeToggle } from "@/components/theme-toggle";
+
 export default function Register() {
   const { register } = useAuth();
   
@@ -33,6 +35,9 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
