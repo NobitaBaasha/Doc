@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { Document } from "@shared/schema";
 
-import { TeamManagement } from "@/components/TeamManagement";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -122,6 +122,7 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-full bg-secondary/50 border border-border/50">
               <div className="bg-background p-1 rounded-full">
                 <User className="h-4 w-4 text-muted-foreground" />

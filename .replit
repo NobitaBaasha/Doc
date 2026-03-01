@@ -47,3 +47,6 @@ CLOUDINARY_API_SECRET = "pgWU3r7vzUO1mEqi1UMgKggnc0Q"
 
 [agent]
 integrations = ["javascript_object_storage:2.0.0"]
+
+[objectStorage]
+defaultBucketID = "replit-objstore-cc7428e5-82ff-4a97-bb1e-8b113ad24d3b"
